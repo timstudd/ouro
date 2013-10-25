@@ -22,6 +22,10 @@ type Tracker struct {
 func GetTrackers(orm *xorm.Engine) ([]Tracker, error) {
 	trackers := make([]Tracker, 0)
 	err := orm.Find(&trackers)
+	if err != nil {
+		return nil, err
+	}	
+
 	return trackers, err
 }
 
@@ -57,13 +61,18 @@ func (self *Tracker) Authenticate() error {
 	env := &Envelope{Auth: &Auth{UUID:userId}}
 	err := self.encoder.Encode(env)
 
+	log.Println("Sent authenticate UUID:", userId)
+
 	return err
 }
 
-func (self *Tracker) Listen() {
+func (self *Tracker) Listen(orm *xorm.Engine) {
 	for {
 		var env Envelope
 		err := self.decoder.Decode(&env)
+
+		log.Println("Got message")
+
 		if err != nil {
 			// Close and reset peerConnections
 			// self.closePeerConnections()
@@ -74,7 +83,12 @@ func (self *Tracker) Listen() {
 		}
 
 		if env.Auth != nil && env.Auth.UUID != "" {
-			// self.Id = env.Auth.UUID
+			self.UUID = env.Auth.UUID
+			log.Println("TId: ", self.Id, self.UUID, orm)
+			_, err = orm.Id(self.Id).Update(self)
+			if err != nil {
+				log.Println("Error updating:", err)
+			}
 			log.Println("Got User Id:", self.Id)
 		}
 

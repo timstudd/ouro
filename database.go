@@ -10,5 +10,6 @@ func GetEngine() (*xorm.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
+	engine.ShowSQL = true
 	return engine, err
 }

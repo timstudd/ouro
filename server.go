@@ -76,8 +76,8 @@ func runListener(t *Tracker, users map[string]*Tracker) {
 				env.Auth.UUID, _ = utils.GenUUID()
 				t.UUID = env.Auth.UUID
 				t.encoder.Encode(env)
-				log.Println("Sent UUID:", t.UUID)
 				users[t.UUID] = t
+				log.Println("Sent UUID:", t.UUID)
 
 			// Authenticate
 			} else {

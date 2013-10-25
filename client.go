@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 )
 
 func runClient(host string) error {
@@ -19,7 +20,7 @@ func runClient(host string) error {
 	}
 
 	// Add default tracker if not exists
-	defaultHost := &Tracker{Host: "hdcserver.centrapi.com:9000", Active: true}
+	defaultHost := &Tracker{Host: "192.168.1.79:9000", Active: true}
 	has, err := engine.Get(defaultHost)
 	if err != nil {
 		return err
@@ -39,20 +40,20 @@ func runClient(host string) error {
 	for _, tracker := range trackers {
 		err = tracker.Connect()
 		if err != nil {
-			return err
+			log.Println("Could not connect to ", tracker.Host)
+		} else {
+			go tracker.Listen(engine)
+			err = tracker.Authenticate()
+			if err != nil {
+				return err
+			}
 		}
-		err = tracker.Authenticate()
-		if err != nil {
-			return err
-		}
-
-		go tracker.Listen()
 	}
 
 	log.Println("Trackers:", len(trackers))
 
 	for {
-
+		time.Sleep(1 * time.Second)
 	}
 
 	// err = self.Connect(host)
