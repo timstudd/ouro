@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/gob"
 	"flag"
-	"net"
 )
 
 var (
@@ -19,7 +17,7 @@ var (
 // PcSignals
 type Envelope struct {
 	PcSignal	*PcSignal
-	UserList	[]User
+	UserList	[]Tracker
 	Auth		*Auth
 }
 
@@ -31,14 +29,6 @@ type PcSignal struct {
 	From    string
 	To      string
 	Payload []byte
-}
-
-type User struct {
-	Id		string
-	Name	string
-	conn    net.Conn
-	encoder *gob.Encoder
-	decoder *gob.Decoder
 }
 
 func init() {

@@ -7,10 +7,10 @@ import (
 	"./utils"
 )
 
-var users map[string]*User
+var users map[string]*Tracker
 
 func runTracker(host string) error {
-	users = make(map[string]*User)
+	users = make(map[string]*Tracker)
 
 	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
@@ -30,43 +30,42 @@ func runTracker(host string) error {
 			continue
 		}
 
-		u := &User{
+		t := &Tracker{
 			conn:    conn,
 			encoder: gob.NewEncoder(conn),
 			decoder: gob.NewDecoder(conn),
 		}
 		
-		go runListener(u, users)
-
+		go runListener(t, users)
 
 	}
 
 	return nil
 }
 
-func sendState(u *User, users map[string]*User) {
+func sendState(t *Tracker, users map[string]*Tracker) {
 	// You just connected, let's tell you about the other users and you can connect to them
-	var userList []User
+	var userList []Tracker
 	for _, iter_user := range users {
-		if iter_user.Id != u.Id { // ignore ourself (the client doesn't know their own ID because this is a trivial example app)
+		if iter_user.UUID != t.UUID { // ignore ourself (the client doesn't know their own ID because this is a trivial example app)
 			userList = append(userList, *iter_user)
 		}
 	}
 	env := &Envelope{
 		UserList: userList,
 	}
-	err := u.encoder.Encode(env)
+	err := t.encoder.Encode(env)
 	if err != nil {
 		// TODO: retry sending user list
 	}
 }
 
-func runListener(u *User, users map[string]*User) {
+func runListener(t *Tracker, users map[string]*Tracker) {
 	for {
 		env := new(Envelope)
-		err := u.decoder.Decode(&env)
+		err := t.decoder.Decode(&env)
 		if err != nil {
-			log.Println("forgetting user: ", u.Id)
+			log.Println("forgetting user: ", t.UUID)
 			// remove this user/conn from the map?
 			return
 		}
@@ -75,29 +74,29 @@ func runListener(u *User, users map[string]*User) {
 			// Create new user
 			if env.Auth.UUID == "" {
 				env.Auth.UUID, _ = utils.GenUUID()
-				u.Id = env.Auth.UUID
-				u.encoder.Encode(env)
-				log.Println("Sent UUID:", u.Id)
-				users[u.Id] = u
+				t.UUID = env.Auth.UUID
+				t.encoder.Encode(env)
+				log.Println("Sent UUID:", t.UUID)
+				users[t.UUID] = t
 
 			// Authenticate
 			} else {
 				if user, ok := users[env.Auth.UUID]; ok {
 					log.Println("Logging in UUID:", env.Auth.UUID)
-					user.conn = u.conn
-					user.encoder = u.encoder
-					user.decoder = u.decoder
+					user.conn = t.conn
+					user.encoder = t.encoder
+					user.decoder = t.decoder
 				} else {
 					log.Println("Unknown user tried login")
 					return
 				}
 			}
 
-			sendState(u, users)
+			sendState(t, users)
 		}
 
 		if env.PcSignal != nil {
-			env.PcSignal.From = u.Id
+			env.PcSignal.From = t.UUID
 
 			log.Println("pcsignal", env.PcSignal.From, "->", env.PcSignal.To)
 
