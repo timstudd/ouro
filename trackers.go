@@ -137,7 +137,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 			time.Sleep(1 * time.Second)
 			err = self.Connect()
 			if err != nil {
-				go self.Listen(engine, self)
+				go self.Listen(orm, self)
 				err = self.Authenticate()
 				if err != nil {
 					return err
