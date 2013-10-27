@@ -20,7 +20,7 @@ func runClient(host string) error {
 	}
 
 	// Add default tracker if not exists
-	defaultHost := &Tracker{Host: "192.168.1.79:9000", Active: true}
+	defaultHost := &Tracker{Host: "192.168.1.64:9000", Active: true}
 	has, err := engine.Get(defaultHost)
 	if err != nil {
 		return err
