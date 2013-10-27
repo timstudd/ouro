@@ -49,6 +49,8 @@ func (self *Tracker) Connect() (error) {
 		return errors.New("Invalid connection")
 	}
 
+	self.peerConnections = make(map[string]*PeerConn)
+
 	log.Println("Connected to ", self.Host)
 
 	return nil
