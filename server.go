@@ -70,7 +70,7 @@ func runListener(t *Tracker, users map[string]*Tracker) {
 			newusers := make(map[string]*Tracker)
 			for _, user := range users {
 				if user.UUID != t.UUID {
-					append(newusers, user)
+					newusers[user.UUID] = user
 				}
 			}
 			users = newusers
