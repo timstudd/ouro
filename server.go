@@ -49,7 +49,7 @@ func sendState(t *Tracker, users map[string]*Tracker) {
 	for _, user := range users {
 		if user.UUID != t.UUID { // ignore ourself (the client doesn't know their own ID because this is a trivial example app)
 			userList = append(userList, *user)
-			log.Println("Added remote user:", user.UUID)
+			log.Println("Added remote user:", user.UUID, t.UUID)
 		}
 	}
 	env := &Envelope{

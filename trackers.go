@@ -122,23 +122,23 @@ func closeRemoteUdp(pc *PeerConn) (error) {
 	return err
 }
 
-func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
+func (tracker *Tracker) Listen(orm *xorm.Engine, user *User) {
 	for {
 		var env Envelope
-		err := self.decoder.Decode(&env)
+		err := tracker.decoder.Decode(&env)
 
 		log.Println("Got message")
 
 		if err != nil {
 			// Close and reset peerConnections
-			self.closePeerConnections()
+			tracker.closePeerConnections()
 
 			// Try to reconnect
 			time.Sleep(1 * time.Second)
-			err = self.Connect()
+			err = tracker.Connect()
 			if err != nil {
-				go self.Listen(orm, user)
-				err = self.Authenticate()
+				go tracker.Listen(orm, user)
+				err = tracker.Authenticate()
 				if err != nil {
 					log.Println("error authenticating")
 				}
@@ -146,17 +146,17 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 		}
 
 		if env.Auth != nil && env.Auth.UUID != "" {
-			self.UUID = env.Auth.UUID
-			_, err = orm.Id(self.Id).Update(self)
+			tracker.UUID = env.Auth.UUID
+			_, err = orm.Id(tracker.Id).Update(tracker)
 			if err != nil {
 				log.Println("Error updating:", err)
 			}
-			log.Println("Got User Id:", self.UUID)
+			log.Println("Got User Id:", tracker.UUID)
 		}
 
 		if env.PcSignal != nil {
 			log.Println("Got pc sig")
-			self.HandlePcSignal(*env.PcSignal)
+			tracker.HandlePcSignal(*env.PcSignal)
 		}
 
 		if env.UserList != nil {
@@ -164,7 +164,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 			// Received list of users - try to establish a PeerConn to each
 			for _, u := range env.UserList {
 				log.Println("Making PC:", u.UUID)
-				self.MakePeerConn(u.UUID, true)
+				tracker.MakePeerConn(u.UUID, true)
 			}
 		}
 	}
