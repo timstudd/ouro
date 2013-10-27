@@ -46,9 +46,10 @@ func runTracker(host string) error {
 func sendState(t *Tracker, users map[string]*Tracker) {
 	// You just connected, let's tell you about the other users and you can connect to them
 	var userList []Tracker
-	for _, iter_user := range users {
-		if iter_user.UUID != t.UUID { // ignore ourself (the client doesn't know their own ID because this is a trivial example app)
-			userList = append(userList, *iter_user)
+	for _, user := range users {
+		if user.UUID != t.UUID { // ignore ourself (the client doesn't know their own ID because this is a trivial example app)
+			userList = append(userList, *user)
+			log.Println("Added remote user:", user.UUID)
 		}
 	}
 	env := &Envelope{

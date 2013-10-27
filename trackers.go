@@ -84,21 +84,20 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 
 		if env.Auth != nil && env.Auth.UUID != "" {
 			self.UUID = env.Auth.UUID
-			log.Println("TId: ", self.Id, self.UUID, orm)
 			_, err = orm.Id(self.Id).Update(self)
 			if err != nil {
 				log.Println("Error updating:", err)
 			}
-			log.Println("Got User Id:", self.Id)
+			log.Println("Got User Id:", self.UUID)
 		}
 
 		if env.PcSignal != nil {
 			log.Println("Got pc sig")
-			// self.HandlePcSignal(*env.PcSignal)
+			user.HandlePcSignal(*env.PcSignal)
 		}
 
 		if env.UserList != nil {
-			log.Println("Got users", env.UserList )
+			log.Println("Got users")
 			// Received list of users - try to establish a PeerConn to each
 			for _, u := range env.UserList {
 				log.Println("Making PC:", u.UUID)

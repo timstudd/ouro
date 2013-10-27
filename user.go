@@ -53,11 +53,11 @@ func (self *User) MakePeerConn(peerId string, initiator bool) *PeerConn {
 	go func() {
 		var err error
 		pc.udpConn, err = nat.Connect(pc.sideband, pc.initiator)
-		pc.cryptConn = &EncryptedConnection{Destination: pc.udpConn}
 		if err != nil {
 			log.Println("err doing nat conn", err)
 			// TODO REMOVE FROM MAP
 		} else {
+			pc.cryptConn = &EncryptedConnection{Destination: pc.udpConn}
 			go func() {
 				pc.ignorePkts = false
 				pc.cryptConn.Write([]byte("Established"))

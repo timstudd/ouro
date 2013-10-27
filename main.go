@@ -10,11 +10,6 @@ var (
 	default_tracker = "hdcserver.centrapi.com:9000"
 )
 
-// An envelope may contain either
-// There's nothing keeping it from being both
-// But we'll never be sending a peer list except for
-// on initial connect, and after that it will only be
-// PcSignals
 type Envelope struct {
 	PcSignal	*PcSignal
 	UserList	[]Tracker
