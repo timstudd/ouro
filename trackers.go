@@ -135,7 +135,14 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 
 			// Try to reconnect
 			time.Sleep(1 * time.Second)
-			self.Connect()
+			err = self.Connect()
+			if err != nil {
+				go self.Listen(engine, self)
+				err = self.Authenticate()
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		if env.Auth != nil && env.Auth.UUID != "" {
