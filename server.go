@@ -67,7 +67,13 @@ func runListener(t *Tracker, users map[string]*Tracker) {
 		err := t.decoder.Decode(&env)
 		if err != nil {
 			log.Println("forgetting user: ", t.UUID)
-			// remove this user/conn from the map?
+			newusers = make(map[string]*Tracker)
+			for _, user := range users {
+				if user.UUID != t.UUID {
+					append(newusers, user)
+				}
+			}
+			users = newusers
 			return
 		}
 
