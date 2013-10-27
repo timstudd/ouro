@@ -140,7 +140,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 				go self.Listen(orm, user)
 				err = self.Authenticate()
 				if err != nil {
-					return err
+					log.Println("error authenticating")
 				}
 			}
 		}
