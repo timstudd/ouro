@@ -131,7 +131,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 
 		if err != nil {
 			// Close and reset peerConnections
-			// self.closePeerConnections()
+			self.closePeerConnections()
 
 			// Try to reconnect
 			time.Sleep(1 * time.Second)
