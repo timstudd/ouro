@@ -66,7 +66,7 @@ func (self *Tracker) Authenticate() error {
 	return err
 }
 
-func (self *Tracker) Listen(orm *xorm.Engine) {
+func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 	for {
 		var env Envelope
 		err := self.decoder.Decode(&env)
@@ -98,11 +98,12 @@ func (self *Tracker) Listen(orm *xorm.Engine) {
 		}
 
 		if env.UserList != nil {
-			log.Println("Got users")
+			log.Println("Got users", env.UserList )
 			// Received list of users - try to establish a PeerConn to each
-			// for _, u := range env.UserList {
-			// 	self.MakePeerConn(u.Id, true)
-			// }
+			for _, u := range env.UserList {
+				log.Println("Making PC:", u.UUID)
+				user.MakePeerConn(u.UUID, true)
+			}
 		}
 	}
 }

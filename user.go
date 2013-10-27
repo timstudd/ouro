@@ -33,56 +33,6 @@ func NewUser() *User {
 	return user
 }
 
-// func (self *User) Authenticate() error {
-// 	var userId string
-
-// 	userId = ""
-// 	if self.Id != "" {
-// 		userId = self.Id
-// 	}
-
-// 	env := Envelope{Auth: &Auth{UUID:userId}}
-// 	err := self.encoder.Encode(&env)
-// 	return err
-// }
-
-// func (self *User) Connect(host string) error {
-// 	err := self.getTrackerConnection(host)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	self.getEncodeDecode()
-// 	self.Authenticate()
-
-// 	return nil
-// }
-
-// func (self *User) getTrackerConnection(host string) (error) {
-// 	addr, err := net.ResolveTCPAddr("tcp", host)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	self.conn, err = net.DialTCP("tcp", nil, addr)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	self.cryptConn = &EncryptedConnection{Destination: self.conn}
-
-// 	return nil
-// }
-
-// func (self *User) getEncodeDecode() error {
-// 	if self.conn != nil {
-// 		self.encoder = gob.NewEncoder(self.conn)
-// 		self.decoder = gob.NewDecoder(self.conn)
-// 		return nil
-// 	}
-// 	return errors.New("Invalid connection")
-// }
-
 func (self *User) HandlePcSignal(signal PcSignal) {
 	pc, ok := self.peerConnections[signal.From]
 	if !ok {
@@ -123,6 +73,7 @@ func (self * User) closePeerConnections() {
 	for _, v := range self.peerConnections {
 		closeRemoteUdp(v)
 	}
+	// Set peer connections to empty
 	self.peerConnections = make(map[string]*PeerConn)
 }
 

@@ -6,7 +6,7 @@ import (
 )
 
 func runClient(host string) error {
-	// self := NewUser()
+	self := NewUser()
 
 	engine, err := GetEngine()
 	if err != nil {
@@ -42,7 +42,7 @@ func runClient(host string) error {
 		if err != nil {
 			log.Println("Could not connect to ", tracker.Host)
 		} else {
-			go tracker.Listen(engine)
+			go tracker.Listen(engine, self)
 			err = tracker.Authenticate()
 			if err != nil {
 				return err
@@ -55,40 +55,4 @@ func runClient(host string) error {
 	for {
 		time.Sleep(1 * time.Second)
 	}
-
-	// err = self.Connect(host)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// for {
-	// 	var env Envelope
-	// 	err := self.decoder.Decode(&env)
-	// 	if err != nil {
-	// 		// Close and reset peerConnections
-	// 		// self.closePeerConnections()
-
-	// 		// Try to reconnect
-	// 		time.Sleep(1 * time.Second)
-	// 		self.Connect(host)
-	// 	}
-
-	// 	if env.Auth != nil && env.Auth.UUID != "" {
-	// 		self.Id = env.Auth.UUID
-	// 		log.Println("Got User Id:", self.Id)
-	// 	}
-
-	// 	if env.PcSignal != nil {
-	// 		self.HandlePcSignal(*env.PcSignal)
-	// 	}
-
-	// 	if env.UserList != nil {
-	// 		// Received list of users - try to establish a PeerConn to each
-	// 		for _, u := range env.UserList {
-	// 			self.MakePeerConn(u.Id, true)
-	// 		}
-	// 	}
-	// }
-
-	// return nil
 }
