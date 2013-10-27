@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./nat"
 	"net"
 	"github.com/lunny/xorm"
 	"encoding/gob"
@@ -10,13 +11,14 @@ import (
 )
 
 type Tracker struct {
-	Id		int64
-	Host	string
-	UUID	string
-	Active	bool
-	conn	net.Conn		`xorm:"-"`
-	encoder	*gob.Encoder	`xorm:"-"`
-	decoder *gob.Decoder	`xorm:"-"`
+	Id				int64
+	Host			string
+	UUID			string
+	Active			bool
+	conn			net.Conn			`xorm:"-"`
+	encoder			*gob.Encoder		`xorm:"-"`
+	decoder 		*gob.Decoder		`xorm:"-"`
+	peerConnections	map[string]*PeerConn `xorm:"-"`
 }
 
 func GetTrackers(orm *xorm.Engine) ([]Tracker, error) {
@@ -66,6 +68,58 @@ func (self *Tracker) Authenticate() error {
 	return err
 }
 
+func (self *Tracker) MakePeerConn(peerId string, initiator bool) *PeerConn {
+	pc := &PeerConn{
+		sideband:   newShimConn(self.encoder, peerId),
+		initiator:  initiator,
+		udpConn:    nil,
+		ignorePkts: true,
+	}
+	self.peerConnections[peerId] = pc
+
+	go func() {
+		var err error
+		pc.udpConn, err = nat.Connect(pc.sideband, pc.initiator)
+		if err != nil {
+			log.Println("err doing nat conn", err)
+			// TODO REMOVE FROM MAP
+		} else {
+			pc.cryptConn = &EncryptedConnection{Destination: pc.udpConn}
+			go func() {
+				pc.ignorePkts = false
+				pc.cryptConn.Write([]byte("Established"))
+			}()
+			handleRemoteUdp(pc)
+		}
+	}()
+
+	return pc
+}
+
+func (self *Tracker) HandlePcSignal(signal PcSignal) {
+	pc, ok := self.peerConnections[signal.From]
+	if !ok {
+		pc = self.MakePeerConn(signal.From, false)
+	}
+	pc.sideband.readChan <- signal.Payload
+}
+
+func (self * Tracker) closePeerConnections() {
+	for _, v := range self.peerConnections {
+		closeRemoteUdp(v)
+	}
+	// Set peer connections to empty
+	self.peerConnections = make(map[string]*PeerConn)
+}
+
+func closeRemoteUdp(pc *PeerConn) (error) {
+	err := pc.udpConn.Close()
+	if err != nil {
+		panic(err)
+	}
+	return err
+}
+
 func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 	for {
 		var env Envelope
@@ -93,7 +147,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 
 		if env.PcSignal != nil {
 			log.Println("Got pc sig")
-			user.HandlePcSignal(*env.PcSignal)
+			self.HandlePcSignal(*env.PcSignal)
 		}
 
 		if env.UserList != nil {
@@ -101,7 +155,7 @@ func (self *Tracker) Listen(orm *xorm.Engine, user *User) {
 			// Received list of users - try to establish a PeerConn to each
 			for _, u := range env.UserList {
 				log.Println("Making PC:", u.UUID)
-				user.MakePeerConn(u.UUID, true)
+				self.MakePeerConn(u.UUID, true)
 			}
 		}
 	}

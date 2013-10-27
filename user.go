@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./nat"
 	"net"
 	"encoding/gob"
 	"log"
@@ -17,7 +16,6 @@ type User struct {
 	cryptConn		*EncryptedConnection
 	encoder			*gob.Encoder
 	decoder			*gob.Decoder
-	peerConnections	map[string]*PeerConn
 }
 
 type PeerConn struct {
@@ -29,52 +27,8 @@ type PeerConn struct {
 }
 
 func NewUser() *User {
-	user := &User{peerConnections: make(map[string]*PeerConn)}
+	user := &User{}
 	return user
-}
-
-func (self *User) HandlePcSignal(signal PcSignal) {
-	pc, ok := self.peerConnections[signal.From]
-	if !ok {
-		pc = self.MakePeerConn(signal.From, false)
-	}
-	pc.sideband.readChan <- signal.Payload
-}
-
-func (self *User) MakePeerConn(peerId string, initiator bool) *PeerConn {
-	pc := &PeerConn{
-		sideband:   newShimConn(self.encoder, peerId),
-		initiator:  initiator,
-		udpConn:    nil,
-		ignorePkts: true,
-	}
-	self.peerConnections[peerId] = pc
-
-	go func() {
-		var err error
-		pc.udpConn, err = nat.Connect(pc.sideband, pc.initiator)
-		if err != nil {
-			log.Println("err doing nat conn", err)
-			// TODO REMOVE FROM MAP
-		} else {
-			pc.cryptConn = &EncryptedConnection{Destination: pc.udpConn}
-			go func() {
-				pc.ignorePkts = false
-				pc.cryptConn.Write([]byte("Established"))
-			}()
-			handleRemoteUdp(pc)
-		}
-	}()
-
-	return pc
-}
-
-func (self * User) closePeerConnections() {
-	for _, v := range self.peerConnections {
-		closeRemoteUdp(v)
-	}
-	// Set peer connections to empty
-	self.peerConnections = make(map[string]*PeerConn)
 }
 
 func handleRemoteUdp(pc *PeerConn) {
@@ -94,12 +48,4 @@ func handleRemoteUdp(pc *PeerConn) {
 			pc.cryptConn.Write([]byte(send))
 		}
 	}
-}
-
-func closeRemoteUdp(pc *PeerConn) (error) {
-	err := pc.udpConn.Close()
-	if err != nil {
-		panic(err)
-	}
-	return err
 }
