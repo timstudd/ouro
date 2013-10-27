@@ -84,6 +84,7 @@ func runListener(t *Tracker, users map[string]*Tracker) {
 			} else {
 				if user, ok := users[env.Auth.UUID]; ok {
 					log.Println("Logging in UUID:", env.Auth.UUID)
+					user.UUID = env.Auth.UUID
 					user.conn = t.conn
 					user.encoder = t.encoder
 					user.decoder = t.decoder
